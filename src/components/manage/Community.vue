@@ -32,7 +32,7 @@
             <Input v-model="handleArticleData.sub_title" style="width: 600px;" />
           </Form-item>
           <Form-item label="上线时间">
-            <DatePicker type="date" @on-change="onlineDateChange" />
+            <DatePicker v-model="handleArticleData.online_time" type="date" @on-change="onlineDateChange" />
           </Form-item>
           <Form-item label="封面">
             <Input v-model="handleArticleData.cover" style="width: 600px;" />
@@ -57,6 +57,17 @@
           </Form-item>
         </Form>
       </div>
+    </Modal>
+    <Modal title="查看留言" v-model="handleCommentVisible" width="70%">
+      <Form :label-width="80" inline>
+        <Form-item label="查询条件：">
+          <span>筛选日期：</span>
+          <DatePicker type="date" @on-change="dateSearch" placeholder="Select date" style="width: 150px" format="yyyy-MM-dd" v-model="commentDate"></DatePicker>
+        </Form-item>
+        <Button type="primary" @click="messageSearch">查询</Button>
+      </Form>
+      <Table :columns="commentList" :data="commentData" />
+      <div slot="footer"></div>
     </Modal>
   </div>
 </template>
@@ -93,6 +104,100 @@ export default {
   components: {PageHeader, quillEditor},
   data() {
     return {
+      commentData: [],
+      commentList: [
+        {
+          title: 'id',
+          key: 'c_id',
+          align: 'center'
+        },
+        {
+          title: 'rId',
+          key: 'author',
+          align: 'center'
+        },
+        {
+          title: '昵称',
+          key: 'nickname',
+          align: 'center'
+        },
+        {
+          title: '评论内容',
+          key: 'content',
+          align: 'center'
+        },
+        {
+          title: '分类',
+          key: 'kind',
+          align: 'center',
+          render: (h, params) => {
+            return (
+              h('p', params.row.kind === 'hot' ? '最热' : '最新')
+            );
+          }
+        },
+        {
+          title: '操作',
+          key: 'handle',
+          align: 'center',
+          render: (h, params) => {
+            return (
+              h('div', {
+                style: {
+                  width: '100%',
+                  display: 'flex'
+                }
+              }, [
+                h('Button', {
+                  props: {
+                    type: params.row.status === 'online' ? 'warning' : 'info'
+                  },
+                  style: {
+                    width: '45%',
+                    size: 'small',
+                    marginRight: '15px'
+                  },
+                  on: {
+                    click: () => {
+                      params.row.status = params.row.status === 'online' ? 'unline' : 'online';
+                      const param = {
+                        id: params.row.c_id,
+                        status: params.row.status
+                      };
+                      this.$api.updateComment(param).then(res => {
+                        if (res.status === 1) {}
+                      });
+                    }
+                  }
+                }, params.row.status === 'online' ? '下线' : '上线'),
+                h('Button', {
+                  props: {
+                    type: params.row.top ? 'primary' : 'success'
+                  },
+                  style: {
+                    width: '45%',
+                    size: 'small'
+                  },
+                  on: {
+                    click: () => {
+                      params.row.top = !params.row.top;
+                      const param = {
+                        id: params.row.c_id,
+                        top: params.row.top
+                      };
+                      this.$api.updateComment(param).then(res => {
+                        if (res.status === 1) {}
+                      });
+                    }
+                  }
+                }, params.row.top ? '置底' : '置顶')
+              ])
+            );
+          }
+        }
+      ],
+      commentDate: '',
+      handleCommentVisible: false,
       editorOption: {
         placeholder: '',
         theme: 'snow',
@@ -122,7 +227,7 @@ export default {
         like: 0
       },
       handleArticleVisible: false,
-      modalTitle: '新建模板',
+      modalTitle: '新建文章',
       mainPage: {
         pageSize: 10,
         page: 1,
@@ -242,8 +347,9 @@ export default {
         {
           title: '操作',
           key: 'handle',
+          align: 'center',
           fixed: 'right',
-          width: '260',
+          width: '300',
           render: (h, params) => {
             return h('div', {
               style: {
@@ -255,9 +361,9 @@ export default {
               h('div', {
                 style: {
                   display: 'flex',
-                  flexDirection: 'row'
-                }
-              },
+                  flexDirection: 'row',
+                  marginTop: '10px'
+                }},
               [
                 h('Button', {
                   props: {
@@ -266,36 +372,17 @@ export default {
                     shape: 'circle'
                   },
                   style: {
-                    width: '48%',
+                    width: '25%',
                     marginRight: '5px'
                   },
                   on: {
                     click: () => {
+                      this.handleArticleVisible = true;
+                      this.modalTitle = '编辑文章';
+                      this.handleArticleData = params.row;
                     }
                   }
                 }, '编辑'),
-                h('Button', {
-                  props: {
-                    type: params.row.statusTypeChange,
-                    size: 'small',
-                    shape: 'circle'
-                  },
-                  style: {
-                    width: '48%'
-                  },
-                  on: {
-                    click: () => {
-                    }
-                  }
-                }, params.row.statusWord)
-              ]),
-              h('div', {
-                style: {
-                  display: 'flex',
-                  flexDirection: 'row',
-                  marginTop: '10px'
-                }},
-              [
                 h('Button', {
                   props: {
                     type: 'primary',
@@ -303,11 +390,13 @@ export default {
                     shape: 'circle'
                   },
                   style: {
-                    width: '48%',
+                    width: '35%',
                     marginRight: '5px'
                   },
                   on: {
                     click: () => {
+                      this.handleCommentVisible = true;
+                      this.commentData = params.row.comment;
                     }
                   }
                 }, '查看留言'),
@@ -318,13 +407,13 @@ export default {
                       trigger: 'hover'
                     },
                     style: {
-                      width: '48%'
+                      width: '25%'
                     }
                   },
                   [
                     h('Button', {
                       props: {
-                        type: 'primary',
+                        type: !params.row.is_online ? 'primary' : 'error',
                         size: 'small',
                         shape: 'circle',
                         icon: 'md-alert'
@@ -336,9 +425,16 @@ export default {
                       },
                       on: {
                         click: () => {
+                          params.row.is_online = !params.row.is_online;
+                          const data = params.row;
+                          delete data._index;
+                          delete data._rowKey;
+                          this.$api.newPgcArticle(data).then(res => {
+                            if (res.status === 1) {}
+                          });
                         }
                       }
-                    }, '发布正式环境'),
+                    }, !params.row.is_online ? '发布正式环境' : '下线'),
                     h('div', {
                       slot: 'content',
                       style: {
@@ -349,7 +445,7 @@ export default {
                           color: 'red'
                         },
                         on: {}
-                      }, '发布到正式环境，慎点！')
+                      }, !params.row.is_online ? '发布到正式环境，慎点！' : '下线，慎点！')
                     ])
                   ])
               ])
@@ -411,6 +507,8 @@ export default {
     };
   },
   methods: {
+    messageSearch() {},
+    dateSearch() {},
     sendNewArticle() {
       console.log(this.handleArticleData);
       this.$api.newPgcArticle(this.handleArticleData).then(res => {
@@ -466,7 +564,7 @@ export default {
     },
     handleNewArticle(type) {
       if (type === 'new') {
-        this.modalTitle = '新建模板';
+        this.modalTitle = '新建文章';
       }
       this.handleArticleVisible = true;
     },

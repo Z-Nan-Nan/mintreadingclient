@@ -72,6 +72,22 @@ const newPgcArticle = (params) => {
   });
 };
 
+const updateComment = (params) => {
+  return fetch({
+    url: '/update_comment',
+    method: 'POST',
+    data: params
+  });
+};
+
+const updateBook = (params) => {
+  return fetch({
+    url: '/update_book',
+    method: 'POST',
+    data: params
+  });
+};
+
 const apiList = {
   getAllStudent,
   getAllPic,
@@ -81,7 +97,9 @@ const apiList = {
   sendNewBook,
   sendNewBookGroup,
   getPgcList,
-  newPgcArticle
+  newPgcArticle,
+  updateComment,
+  updateBook
 };
 
 export default apiList;

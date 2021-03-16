@@ -7,7 +7,6 @@
             <span style="color: #19be6b; font-size: 18px;">Route</span>
             <strong style="color:#ff9900;font-size: 24px;">~八戒</strong>
           </div>
-          <Menu-item name="/index"><Icon />首页</Menu-item>
           <Submenu :name="i" v-for="(item, i) in menu" :key="i" :title="item.name" v-if="item.children && item.children.length>0 && !item.hidden">
             <template slot="title">
               <Icon :type="item.icon" />

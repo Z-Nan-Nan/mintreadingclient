@@ -74,7 +74,7 @@
             <div>
               <span style="width: 80px; height: 40px; border: 1px grey solid; border-radius: 3px; margin-right: 10px; padding: 10px;" v-for="(item, index) in newBookGroupInfo.book_list" :key="index">{{item.name_cn}}</span>
               <Select @on-change="addNewGroupBook" v-model="newGroupBook" style="width: 200px;">
-                <Option v-for="(item, index) in tempBookList" :key="index" :value="item.value">{{item.label}}</Option>
+                <Option v-for="(item, index) in tempBookList" :key="index" :value="item.book_id">{{item.name_cn}}</Option>
               </Select>
             </div>
           </Form-item>
@@ -125,6 +125,37 @@
         </Form>
       </div>
     </Modal>
+    <Modal v-model="handleBookDetail" title="书籍详情" width="50%" @on-ok="sendUpdateBook">
+      <Form :label-width="120">
+        <Form-item label="id">
+          <p>{{isEditBook.book_id}}</p>
+        </Form-item>
+        <Form-item label="封面">
+          <img :src="isEditBook.img_src" alt="" style="width: 73px; height: 110px;" />
+          <Input v-model="isEditBook.img_src" style="width: 400px;" />
+        </Form-item>
+        <Form-item label="书名">
+          <Input v-model="isEditBook.name_en" style="width: 400px;" />
+        </Form-item>
+        <Form-item label="中文书名">
+          <Input v-model="isEditBook.name_cn" style="width: 400px;" />
+        </Form-item>
+        <Form-item label="作者">
+          <Input v-model="isEditBook.author" style="width: 400px;" />
+        </Form-item>
+        <Form-item label="书籍描述">
+          <Input v-model="isEditBook.book_desc" type="textarea" :rows="5" style="width: 400px;" />
+        </Form-item>
+        <Form-item label="所属书单">
+          <Input v-model="isEditBook.book_group" style="width: 400px;" />
+        </Form-item>
+        <Form-item label="章节">
+          <p v-for="(item, index) in isEditBook.chapter_num" :key="index">Chapter{{item}}</p>
+          <Input type="textarea" :rows="50" v-model="isEditBook.new_chapter" v-if="addArticleInput" />
+          <Button type="primary" size="small" @click="addArticleInput = true">添加章节</Button>
+        </Form-item>
+      </Form>
+    </Modal>
   </div>
 </template>
 
@@ -135,6 +166,19 @@ export default {
   components: {PageHeader},
   data() {
     return {
+      addArticleInput: false,
+      isEditBook: {
+        book_id: '',
+        img_src: '',
+        name_en: '',
+        name_cn: '',
+        author: '',
+        book_desc: '',
+        book_group: '',
+        chapter_num: '',
+        new_chapter: ''
+      },
+      handleBookDetail: false,
       tempBookList: [],
       newGroupBook: '',
       tempBook: '',
@@ -439,12 +483,47 @@ export default {
           key: 'handle',
           align: 'center',
           render: (h, params) => {
-            return h('Button', {
-              props: {
-                type: 'error',
-                size: 'small'
+            return h('div', {
+              style: {
+                display: 'flex'
               }
-            }, '删除');
+            }, [
+              h('Button', {
+                props: {
+                  type: 'info',
+                  size: 'small'
+                },
+                style: {
+                  width: '40%',
+                  marginRight: '15px'
+                },
+                on: {
+                  click: () => {
+                    this.handleBookDetail = true;
+                    this.isEditBook = {
+                      book_id: params.row.book_id,
+                      img_src: params.row.img_src,
+                      name_en: params.row.name_en,
+                      name_cn: params.row.name_cn,
+                      author: params.row.author,
+                      book_desc: params.row.book_desc,
+                      book_group: params.row.book_group,
+                      chapter_num: params.row.chapter_num,
+                      new_chapter: ''
+                    };
+                  }
+                }
+              }, '详情'),
+              h('Button', {
+                props: {
+                  type: 'error',
+                  size: 'small'
+                },
+                style: {
+                  width: '40%'
+                }
+              }, '删除')
+            ]);
           }
         }
       ],
@@ -464,6 +543,14 @@ export default {
     };
   },
   methods: {
+    sendUpdateBook() {
+      const params = this.isEditBook;
+      delete params.book_group;
+      this.$api.updateBook(params).then(res => {
+        if (res.status === 1) {
+        }
+      });
+    },
     groupDateChange(e) {
       const startDate = e[0].split('-');
       const endDate = e[1].split('-');

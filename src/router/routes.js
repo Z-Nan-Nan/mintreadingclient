@@ -15,15 +15,6 @@ const routes = [
         children: [],
         fixed: false,
         icon: 'ios-people'
-      },
-      {
-        path: '/student_activity',
-        id: 'student_activity',
-        name: '学员动态',
-        level: 1,
-        children: [],
-        fixed: false,
-        icon: 'ios-body'
       }
     ]
   },

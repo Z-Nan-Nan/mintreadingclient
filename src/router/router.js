@@ -1,7 +1,6 @@
 import Home from '../components/layout/Home';
 
 const AllStudent = () => import('@/components/student/Student');
-const StudentActivity = () => import('@/components/student/StudentActivity');
 const DailyPic = () => import('@/components/manage/DailyPic');
 const Book = () => import('@/components/manage/Book');
 const ImageUpload = () => import('@/components/tool/ImageUpload');
@@ -19,12 +18,6 @@ const routers = [
         name: '所有学员',
         level: 1,
         component: AllStudent
-      },
-      {
-        path: '/student_activity',
-        name: '学员活动',
-        level: 1,
-        component: StudentActivity
       },
       {
         path: '/daily_pic',
